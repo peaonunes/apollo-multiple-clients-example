@@ -35,16 +35,13 @@ class App extends Component {
 }
 
 const storeQuery = gql`
-  query {
-    stores {
-      edges {
-        name
-        id
-      }
-      totalCount
-    }
+query GetExchangeRates {
+  rates(currency: "USD") {
+    currency
+    rate
   }
-`;
+}
+`
 
 const QueryDefaultClient = () => {
   return (
@@ -52,67 +49,52 @@ const QueryDefaultClient = () => {
       {({ error, loading, data }) => {
         if (error) return "Error!";
         if (loading) return "Loading!";
-
-        if (data) {
-          const stores = data.stores;
-          return (
-            <ul>
-              <h3>Default client providing stores</h3>
-              <p>{`${stores.totalCount} stores!`}</p>
-              {stores.edges.map(store => {
-                return (
-                  <li key={`${store.name}-${store.id}`}>{`Name: ${
-                    store.name
-                  } - Id: ${store.id}`}</li>
-                );
-              })}
-            </ul>
-          );
-        }
+      
+        return data.rates.map(({ currency, rate }) => (
+          <div key={currency}>
+            <p>
+              {currency}: {rate}
+            </p>
+          </div>
+        ));
       }}
     </Query>
   );
 };
 
-const cityQuery = gql`
-  query {
-    cities {
-      edges {
-        name
-        id
-      }
-      totalCount
-    }
+const dogsQuery = gql`
+query GetDogs {
+  dogs {
+    id
+    breed
   }
+}
 `;
 
 const customClient = new ApolloClient({
-  uri: "http://localhost:3002/graphql"
+  uri: "https://71z1g.sse.codesandbox.io/"
 });
 
 const QueryOverridingClient = () => {
+  const onDogSelected = () => console.log('Dog selected')
   return (
-    <Query query={cityQuery} client={customClient}>
+    <Query query={dogsQuery} client={customClient}>
       {({ error, loading, data }) => {
         if (error) return "Error!";
+        if (error) {
+          console.log('error: ', error)
+        }
         if (loading) return "Loading!";
 
-        if (data) {
-          const cities = data.cities;
-          return (
-            <ul>
-              <h3>Overriding client through props providing cities</h3>
-              <p>{`${cities.totalCount} cities!`}</p>
-              {cities.edges.map(city => {
-                return (
-                  <li key={`${city.name}-${city.id}`}>{`Name: ${
-                    city.name
-                  } - Id: ${city.id}`}</li>
-                );
-              })}
-            </ul>
-          );
-        }
+        return (
+          <select name="dog" onChange={() => onDogSelected()}>
+            {data.dogs.map(dog => (
+              <option key={dog.id} value={dog.breed}>
+                {dog.breed}
+              </option>
+            ))}
+          </select>
+        );
       }}
     </Query>
   );
